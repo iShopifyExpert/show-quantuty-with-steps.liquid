@@ -1,0 +1,62 @@
+{%- assign start_qty = 0 -%}
+{%- assign step_qty = 0 -%}
+{%- assign has_valid_tag = false -%}
+
+{%- assign allowed_tags = "2/2,3/3,4/4,6/6,8/8,12/12,24/24,36/36" | split: "," -%}
+
+{%- for tag in product.tags -%}
+  {% if allowed_tags contains tag %}
+    {% assign parts = tag | split: '/' %}
+    {% assign start_str = parts[0] | strip %}
+    {% assign step_str = parts[1] | strip %}
+    {% if start_str != blank and step_str != blank %}
+      {% assign start_qty = start_str | plus: 0 %}
+      {% assign step_qty = step_str | plus: 0 %}
+      {% assign has_valid_tag = true %}
+      {% break %}
+    {% endif %}
+  {% endif %}
+{%- endfor -%}
+
+{% assign max_qty = 999 %}
+
+{% if has_valid_tag %}
+  <!-- Visible dropdown selector -->
+  <div class="quantity quantity--dropdown">
+    <label for="Quantity-custom-{{ section.id }}" class="visually-hidden">
+      {{ 'products.product.quantity.label' | t }}
+    </label>
+    <select class="quantity__input"
+            id="Quantity-custom-{{ section.id }}">
+      {% for i in (0..100) %}
+        {% assign increment = step_qty | times: i %}
+        {% assign qty = start_qty | plus: increment %}
+        {% if qty > max_qty %}{% break %}{% endif %}
+        <option value="{{ qty }}" {% if forloop.first %}selected{% endif %}>
+          {{ qty }}
+        </option>
+      {% endfor %}
+    </select>
+  </div>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const qtySelect = document.getElementById("Quantity-custom-{{ section.id }}");
+      const qtyInput  = document.getElementById("Quantity-{{ section.id }}");
+
+      if (qtySelect && qtyInput) {
+        // sync on page load
+        qtyInput.value = qtySelect.value;
+
+        // sync on change
+        qtySelect.addEventListener("change", function () {
+          qtyInput.value = this.value;
+
+          // fire both so theme scripts & QuantityInput catch it
+          qtyInput.dispatchEvent(new Event("input", { bubbles: true }));
+          qtyInput.dispatchEvent(new Event("change", { bubbles: true }));
+        });
+      }
+    });
+  </script>
+{% endif %}
