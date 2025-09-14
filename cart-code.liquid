@@ -1,0 +1,57 @@
+{%- assign start_qty = 4 -%}
+{%- assign step_qty  = 4 -%}
+{%- assign allowed_tags = "1/1,2/2,3/3,4/4,6/6,8/8,12/12,24/24,36/36" | split: "," -%}
+
+{%- for t in item.product.tags -%}
+{%- if allowed_tags contains t -%}
+  {%- assign parts = t | split: "/" -%}
+  {%- assign start_qty = parts[0] | plus: 0 -%}
+  {%- assign step_qty  = parts[1] | plus: 0 -%}
+  {%- break -%}
+{%- endif -%}
+{%- endfor -%}
+<quantity-input class="quantity cart-quantity">
+<button class="quantity__button" name="minus" type="button">
+  <span class="visually-hidden">
+    {{-
+      'products.product.quantity.decrease'
+      | t: product: item.product.title
+      | escape
+    -}}
+  </span>
+  <span class="svg-wrapper">
+    {{- 'icon-minus.svg' | inline_asset_content -}}
+  </span>
+</button>
+<input
+  class="quantity__input"
+  type="number"
+  data-quantity-variant-id="{{ item.variant.id }}"
+  name="updates[]"
+  value="{{ item.quantity }}"
+  {% # theme-check-disable %}
+  data-cart-quantity="{{ cart | item_count_for_variant: item.variant.id }}"
+  min="{{ start_qty }}"
+  data-min="{{ start_qty }}"
+  {% if item.variant.quantity_rule.max != null %}
+    max="{{ item.variant.quantity_rule.max }}"
+  {% endif %}
+  step="{{ step_qty }}"
+  {% # theme-check-enable %}
+  aria-label="{{ 'products.product.quantity.input_label' | t: product: item.product.title | escape }}"
+  id="Drawer-quantity-{{ item.index | plus: 1 }}"
+  data-index="{{ item.index | plus: 1 }}"
+>
+<button class="quantity__button" name="plus" type="button">
+  <span class="visually-hidden">
+    {{-
+      'products.product.quantity.increase'
+      | t: product: item.product.title
+      | escape
+    -}}
+  </span>
+  <span class="svg-wrapper">
+    {{- 'icon-plus.svg' | inline_asset_content -}}
+  </span>
+</button>
+</quantity-input>
